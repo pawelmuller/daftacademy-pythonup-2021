@@ -74,10 +74,14 @@ def test_auth():
     assert response.status_code == 401
 
 
-@pytest.mark.parametrize("index,name,surname", [(1, "Jan", "Kowalski"), (2, "Adam", "Nawalka"), (3, "Bogdan", "Nowak")])
-def test_vaccinate(index, name, surname):
+@pytest.mark.parametrize("index,name,surname,days",
+                         [(1, "Jan", "Kowalski", 11),
+                          (2, "Artur", "Nawalka", 12),
+                          (3, "Bogdan", "Nowacki", 13),
+                          (4, "Aleksander", "Multiinstrumentalista", 31)])
+def test_vaccinate(index, name, surname, days):
     today = datetime.now()
-    vaccination_date = today + timedelta(days=len(name) + len(surname))
+    vaccination_date = today + timedelta(days=days)
 
     json_to_post = {
         "name": name,
