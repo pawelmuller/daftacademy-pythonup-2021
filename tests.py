@@ -11,7 +11,7 @@ def test_read_main():
 
 
 def test_hello_name():
-    name = 'Kamila'
+    name = 'Pawel'
     response = client.get(f"/hello/{name}")
     assert response.status_code == 200
     assert response.text == f'"Hello {name}"'
