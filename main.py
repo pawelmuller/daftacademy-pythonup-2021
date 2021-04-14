@@ -1,8 +1,20 @@
 from fastapi import FastAPI, Response, Request
 from hashlib import sha512
+from typing import Optional
+from pydantic import BaseModel
+from datetime import datetime, timedelta
 
 app = FastAPI()
 app.counter = 0
+app.patient_id = 0
+
+
+class Patient(BaseModel):
+    id: Optional[int] = None
+    name: str
+    surname: str
+    register_date: Optional[str] = None
+    vaccination_date: Optional[str] = None
 
 
 @app.get("/")
@@ -38,3 +50,17 @@ async def method_post_return(password: str = None, password_hash: str = None, *,
         true_password_hash = sha512(str(password).encode('UTF-8')).hexdigest()
         if true_password_hash == password_hash:
             response.status_code = 204
+
+
+@app.post("/register", status_code=201)
+async def register_for_vaccination(patient: Patient):
+    today = datetime.now()
+    app.patient_id += 1
+
+    patient.id = app.patient_id
+    patient.register_date = f'{today.year}-{today.month:02}-{today.day:02}'
+
+    vaccination_date = today + timedelta(days=len(patient.name) + len(patient.surname))
+    patient.vaccination_date = f'{vaccination_date.year}-{vaccination_date.month:02}-{vaccination_date.day:02}'
+
+    return patient
