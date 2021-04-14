@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, Request
 from hashlib import sha512
 
 app = FastAPI()
@@ -22,28 +22,12 @@ async def counter():
 
 
 @app.get("/method")
-async def method_get_return():
-    return {"method": "GET"}
-
-
 @app.put("/method")
-async def method_put_return():
-    return {"method": "PUT"}
-
-
 @app.options("/method")
-async def method_options_return():
-    return {"method": "OPTIONS"}
-
-
 @app.delete("/method")
-async def method_delete_return():
-    return {"method": "DELETE"}
-
-
 @app.post("/method", status_code=201)
-async def method_post_return():
-    return {"method": "POST"}
+async def method_get_return(request: Request):
+    return {"method": f"{request.method}"}
 
 
 @app.get("/auth", status_code=401)
