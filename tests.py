@@ -78,7 +78,8 @@ def test_auth():
                          [(1, "Jan", "Kowalski", 11),
                           (2, "Artur", "Nawalka", 12),
                           (3, "Bogdan", "Nowacki", 13),
-                          (4, "Aleksander", "Multiinstrumentalista", 31)])
+                          (4, "Aleksander", "Multiinstrumentalista", 31),
+                          (5, "Olgab 432 mm", "Orangut4n", 15)])
 def test_vaccinate(index, name, surname, days):
     today = datetime.now()
     vaccination_date = today + timedelta(days=days)

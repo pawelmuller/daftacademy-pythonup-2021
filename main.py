@@ -1,3 +1,4 @@
+import string
 from fastapi import FastAPI, Response, Request
 from hashlib import sha512
 from typing import Optional
@@ -61,7 +62,14 @@ async def register_for_vaccination(patient: Patient):
     patient.id = app.patient_id
     patient.register_date = f'{today.year}-{today.month:02}-{today.day:02}'
 
-    vaccination_date = today + timedelta(days=len(patient.name) + len(patient.surname))
+    name_surname = ''
+    for name in (patient.name, patient.surname):
+        for letter in name:
+            if letter in string.ascii_letters:
+                name_surname += letter
+
+    difference = len(name_surname)
+    vaccination_date = today + timedelta(days=difference)
     patient.vaccination_date = f'{vaccination_date.year}-{vaccination_date.month:02}-{vaccination_date.day:02}'
     app.patients.append(patient)
     return patient
