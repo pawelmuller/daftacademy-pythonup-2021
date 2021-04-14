@@ -1,13 +1,8 @@
 from fastapi import FastAPI
 
-
-def main():
-    app = FastAPI()
-
-    @app.get("/")
-    def root():
-        return {"message": "Hello World!"}
+app = FastAPI()
 
 
-if __name__ == '__main__':
-    main()
+@app.get("/")
+def root():
+    return {"message": "Hello World!"}
