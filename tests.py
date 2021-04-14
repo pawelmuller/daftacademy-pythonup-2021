@@ -16,3 +16,13 @@ def test_hello_name():
     assert response.status_code == 200
     assert response.text == f'"Hello {name}"'
 
+
+def test_counter():
+    response = client.get(f"/counter")
+    assert response.status_code == 200
+    assert response.text == "1"
+
+    response = client.get(f"/counter")
+    assert response.status_code == 200
+    assert response.text == "2"
+
