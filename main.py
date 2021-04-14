@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 app = FastAPI()
 app.counter = 0
 app.patient_id = 0
+app.patients = []
 
 
 class Patient(BaseModel):
@@ -64,3 +65,17 @@ async def register_for_vaccination(patient: Patient):
     patient.vaccination_date = f'{vaccination_date.year}-{vaccination_date.month:02}-{vaccination_date.day:02}'
 
     return patient
+
+
+@app.get("/patient/{patient_id}")
+async def get_patient(patient_id: Optional[int] = None, *, response: Response):
+    if patient_id > len(app.patients):
+        response.status_code = 404
+        return
+    elif patient_id < 1:
+        response.status_code = 400
+        return
+    else:
+        patient = app.patients[patient_id - 1]
+        response.status_code = 200
+        return patient
