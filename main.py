@@ -63,7 +63,7 @@ async def register_for_vaccination(patient: Patient):
 
     vaccination_date = today + timedelta(days=len(patient.name) + len(patient.surname))
     patient.vaccination_date = f'{vaccination_date.year}-{vaccination_date.month:02}-{vaccination_date.day:02}'
-
+    app.patients.append(patient)
     return patient
 
 
