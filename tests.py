@@ -1,6 +1,8 @@
+import pytest
 from fastapi.testclient import TestClient
 from main import app
 from hashlib import sha512
+from datetime import datetime, timedelta
 
 client = TestClient(app)
 
@@ -70,3 +72,24 @@ def test_auth():
 
     response = client.get(f"/auth")
     assert response.status_code == 401
+
+
+@pytest.mark.parametrize("index,name,surname", [(1, "Jan", "Kowalski"), (2, "Adam", "Nawalka"), (3, "Bogdan", "Nowak")])
+def test_vaccinate(index, name, surname):
+    today = datetime.now()
+    vaccination_date = today + timedelta(days=len(name) + len(surname))
+
+    json_to_post = {
+        "name": name,
+        "surname": surname
+    }
+    resp = {
+       "id": index,
+       "name": name,
+       "surname": surname,
+       "register_date": f'{today.year}-{today.month:02}-{today.day:02}',
+       "vaccination_date": f'{vaccination_date.year}-{vaccination_date.month:02}-{vaccination_date.day:02}'
+    }
+    response = client.post(f"/register", json=json_to_post)
+    assert response.json() == resp
+    assert response.status_code == 201
