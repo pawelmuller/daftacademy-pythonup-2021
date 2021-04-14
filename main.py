@@ -62,14 +62,12 @@ async def register_for_vaccination(patient: Patient):
     patient.id = app.patient_id
     patient.register_date = f'{today.year}-{today.month:02}-{today.day:02}'
 
-    name_surname = ''
-    for name in (patient.name, patient.surname):
-        for letter in name:
-            if letter in string.ascii_letters:
-                name_surname += letter
+    letters_count = 0
+    for letter in patient.name + patient.surname:
+        if letter in string.ascii_letters:
+            letters_count += 1
 
-    difference = len(name_surname)
-    vaccination_date = today + timedelta(days=difference)
+    vaccination_date = today + timedelta(days=letters_count)
     patient.vaccination_date = f'{vaccination_date.year}-{vaccination_date.month:02}-{vaccination_date.day:02}'
     app.patients.append(patient)
     return patient
