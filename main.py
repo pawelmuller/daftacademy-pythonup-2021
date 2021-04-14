@@ -18,3 +18,28 @@ async def hello_name(name: str):
 async def counter():
     app.counter += 1
     return app.counter
+
+
+@app.get("/method")
+async def method_get_return():
+    return {"method": "GET"}
+
+
+@app.put("/method")
+async def method_put_return():
+    return {"method": "PUT"}
+
+
+@app.options("/method")
+async def method_options_return():
+    return {"method": "OPTIONS"}
+
+
+@app.delete("/method")
+async def method_delete_return():
+    return {"method": "DELETE"}
+
+
+@app.post("/method", status_code=201)
+async def method_post_return():
+    return {"method": "POST"}

@@ -26,3 +26,24 @@ def test_counter():
     assert response.status_code == 200
     assert response.text == "2"
 
+
+def test_method_return():
+    response = client.get(f"/method")
+    assert response.status_code == 200
+    assert response.json() == {"method": "GET"}
+
+    response = client.put(f"/method")
+    assert response.status_code == 200
+    assert response.json() == {"method": "PUT"}
+
+    response = client.options(f"/method")
+    assert response.status_code == 200
+    assert response.json() == {"method": "OPTIONS"}
+
+    response = client.delete(f"/method")
+    assert response.status_code == 200
+    assert response.json() == {"method": "DELETE"}
+
+    response = client.post(f"/method")
+    assert response.status_code == 201
+    assert response.json() == {"method": "POST"}
