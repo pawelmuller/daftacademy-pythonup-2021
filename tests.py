@@ -97,3 +97,17 @@ def test_vaccinate(index, name, surname, days):
     response = client.post(f"/register", json=json_to_post)
     assert response.json() == resp
     assert response.status_code == 201
+
+
+def test_get_patient():
+    response = client.get(f"/patient/-1")
+    assert response.status_code == 400
+
+    response = client.get(f"/patient/2")
+    resp = response.json()
+    assert resp["name"] == "Artur"
+    assert response.status_code == 200
+
+    response = client.get(f"/patient/300")
+    assert response.status_code == 404
+
