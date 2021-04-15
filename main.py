@@ -3,12 +3,14 @@ from fastapi import FastAPI, Response, Request
 from hashlib import sha512
 from typing import Optional
 from pydantic import BaseModel
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 
 app = FastAPI()
 app.counter = 0
 app.patient_id = 0
 app.patients = []
+
+today = date.today()
 
 
 class Patient(BaseModel):
@@ -56,19 +58,16 @@ async def method_post_return(password: str = None, password_hash: str = None, *,
 
 @app.post("/register", status_code=201)
 async def register_for_vaccination(patient: Patient):
-    today = datetime.now()
     app.patient_id += 1
-
-    patient.id = app.patient_id
-    patient.register_date = f'{today.year}-{today.month:02}-{today.day:02}'
-
     letters_count = 0
     for letter in patient.name + patient.surname:
         if letter in string.ascii_letters:
             letters_count += 1
-
     vaccination_date = today + timedelta(days=letters_count)
-    patient.vaccination_date = f'{vaccination_date.year}-{vaccination_date.month:02}-{vaccination_date.day:02}'
+
+    patient.id = app.patient_id
+    patient.register_date = f'{today}'
+    patient.vaccination_date = f'{vaccination_date}'
     app.patients.append(patient)
     return patient
 
