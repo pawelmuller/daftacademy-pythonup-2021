@@ -48,9 +48,9 @@ async def method_get_return(request: Request):
 
 @app.get("/auth", status_code=401)
 async def method_post_return(password: str = None, password_hash: str = None, *, response: Response):
-    if password is None or password_hash is None:
+    if password is None or password_hash is None or len(password) == 0 or len(password_hash) == 0:
         response.status_code = 401
-    elif len(password) != 0 and len(password_hash) != 0:
+    else:
         true_password_hash = sha512(str(password).encode('UTF-8')).hexdigest()
         if true_password_hash == password_hash:
             response.status_code = 204
