@@ -61,7 +61,7 @@ async def register_for_vaccination(patient: Patient):
     app.patient_id += 1
     letters_count = 0
     for letter in patient.name + patient.surname:
-        if letter in string.ascii_letters:
+        if letter.isalpha():
             letters_count += 1
     vaccination_date = today + timedelta(days=letters_count)
 
