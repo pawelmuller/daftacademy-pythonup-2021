@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, Request
+from fastapi import FastAPI, Response, Request, status
 from fastapi.responses import HTMLResponse
 from hashlib import sha512
 from typing import Optional
@@ -9,6 +9,9 @@ app = FastAPI()
 app.counter = 0
 app.patient_id = 0
 app.patients = []
+
+app.login_session = None
+
 
 today = date.today()
 
@@ -89,3 +92,13 @@ async def get_patient(patient_id: Optional[int] = None, *, response: Response):
         patient = app.patients[patient_id - 1]
         response.status_code = 200
         return patient
+
+
+@app.post("/login_session", status_code=status.HTTP_201_CREATED)
+async def login_session(user: str, password: str, response: Response):
+    if user == "4dm1n" and password == "NotSoSecurePa$$":
+        app.login_session = f"{today}+{user}+{password}"
+        response.set_cookie(key="session_token", value=app.login_session)
+    else:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+    return
