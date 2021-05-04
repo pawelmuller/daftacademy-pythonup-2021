@@ -139,7 +139,8 @@ def welcome_response(response_format: str):
 
 
 @app.get("/welcome_session", status_code=status.HTTP_200_OK)
-async def welcome_session(format: Optional[str] = '', session_token: Optional[str] = Cookie(None), *, response: Response):
+async def welcome_session(format: Optional[str] = Query(None), session_token: Optional[str] = Cookie(None),
+                          *, response: Response):
     if session_token == app.login_session:
         return welcome_response(format)
     else:
@@ -148,7 +149,7 @@ async def welcome_session(format: Optional[str] = '', session_token: Optional[st
 
 
 @app.get("/welcome_token", status_code=status.HTTP_200_OK)
-async def welcome_token(format: Optional[str] = '', token: Optional[str] = '', *, response: Response):
+async def welcome_token(format: Optional[str] = Query(None), token: Optional[str] = Query(None), *, response: Response):
     if token == app.login_token:
         return welcome_response(format)
     else:
