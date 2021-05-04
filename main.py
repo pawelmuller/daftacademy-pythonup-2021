@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Response, Request, status, Depends, Cookie
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi import FastAPI, Response, Request, status, Depends, Cookie, Query
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from hashlib import sha512
 from typing import Optional
@@ -139,7 +139,8 @@ def welcome_response(response_format: str):
 
 
 @app.get("/welcome_session", status_code=status.HTTP_200_OK)
-async def welcome_session(format: Optional[str] = '', session_token: Optional[str] = Cookie(None), *, response: Response):
+async def welcome_session(format: Optional[str] = Query(None), session_token: Optional[str] = Cookie(None),
+                          *, response: Response):
     if session_token == app.login_session:
         return welcome_response(format)
     else:
@@ -148,9 +149,41 @@ async def welcome_session(format: Optional[str] = '', session_token: Optional[st
 
 
 @app.get("/welcome_token", status_code=status.HTTP_200_OK)
-async def welcome_token(format: Optional[str] = '', token: Optional[str] = '', *, response: Response):
+async def welcome_token(format: Optional[str] = Query(None), token: Optional[str] = Query(None), *, response: Response):
     if token == app.login_token:
         return welcome_response(format)
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {"message": "No session"}
+
+
+@app.delete("/logout_session", status_code=status.HTTP_302_FOUND)
+async def logout_session(format: Optional[str] = Query(None), session_token: Optional[str] = Cookie(None),
+                          *, response: Response):
+    if session_token == app.login_session:
+        app.login_session = None
+        return RedirectResponse(f"/logged_out?&format={format}", status_code=status.HTTP_303_SEE_OTHER)
+    else:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+
+
+@app.delete("/logout_token", status_code=status.HTTP_302_FOUND)
+async def logout_token(format: Optional[str] = Query(None), token: Optional[str] = Query(None), *, response: Response):
+    if token == app.login_token:
+        app.login_token = None
+        return RedirectResponse(f"/logged_out?&format={format}", status_code=status.HTTP_303_SEE_OTHER)
+    else:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+
+
+@app.get("/logged_out", status_code=status.HTTP_200_OK)
+async def logged_out(format: Optional[str] = Query(None)):
+    if format == "html":
+        html_content = "<h1>Logged out!</h1>"
+        return HTMLResponse(content=html_content)
+    elif format == "json":
+        json_content = {"message": "Logged out!"}
+        return JSONResponse(content=json_content)
+    else:
+        plain_content = "Logged out!"
+        return PlainTextResponse(content=plain_content)
