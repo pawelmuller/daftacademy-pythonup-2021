@@ -4,19 +4,20 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from hashlib import sha512
 from typing import Optional
 from pydantic import BaseModel
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import secrets
 
 app = FastAPI()
 security = HTTPBasic()
 
+SESSIONS_LIMIT = 3
+
 app.counter = 0
 app.patient_id = 0
 app.patients = []
 
-app.login_session = None
-app.login_token = None
-
+app.login_sessions = []
+app.login_tokens = []
 
 today = date.today()
 
@@ -99,14 +100,37 @@ async def get_patient(patient_id: Optional[int] = None, *, response: Response):
         return patient
 
 
-@app.post("/login_session", status_code=status.HTTP_201_CREATED)
-async def login_session(credentials: HTTPBasicCredentials = Depends(security), *, response: Response):
+def check_credentials(credentials: HTTPBasicCredentials):
     correct_username = secrets.compare_digest(credentials.username, "4dm1n")
     correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
+    return True if correct_username and correct_password else False
 
-    if correct_username and correct_password:
-        app.login_session = sha512(f"{today}+{credentials.username}+{credentials.password}".encode()).hexdigest()
-        response.set_cookie(key="session_token", value=app.login_session)
+
+def generate_key(credentials: HTTPBasicCredentials):
+    return sha512(f"{datetime.now()}+{credentials.username}+{credentials.password}".encode()).hexdigest()
+
+
+def add_session_key(key: str, storage: list):
+    if len(storage) >= 3:
+        del storage[0]
+    storage.append(key)
+    print(storage)
+
+
+def check_session_key(key: str, storage: list):
+    return True if key in storage else False
+
+
+def remove_session_key(key: str, storage: list):
+    storage.remove(key)
+
+
+@app.post("/login_session", status_code=status.HTTP_201_CREATED)
+async def login_session(credentials: HTTPBasicCredentials = Depends(security), *, response: Response):
+    if check_credentials(credentials):
+        session_key = generate_key(credentials)
+        add_session_key(session_key, app.login_sessions)
+        response.set_cookie(key="session_token", value=session_key)
         return {"message": "Welcome!"}
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
@@ -115,12 +139,10 @@ async def login_session(credentials: HTTPBasicCredentials = Depends(security), *
 
 @app.post("/login_token", status_code=status.HTTP_201_CREATED)
 async def login_token(credentials: HTTPBasicCredentials = Depends(security), *, response: Response):
-    correct_username = secrets.compare_digest(credentials.username, "4dm1n")
-    correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
-
-    if correct_username and correct_password:
-        app.login_token = sha512(f"{today}+{credentials.username}+{credentials.password}".encode()).hexdigest()
-        return {"token": app.login_token}
+    if check_credentials(credentials):
+        session_key = generate_key(credentials)
+        add_session_key(session_key, app.login_tokens)
+        return {"token": session_key}
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {"message": "Wrong username or password!"}
@@ -141,7 +163,7 @@ def welcome_response(response_format: str):
 @app.get("/welcome_session", status_code=status.HTTP_200_OK)
 async def welcome_session(format: Optional[str] = Query(None), session_token: Optional[str] = Cookie(None),
                           *, response: Response):
-    if session_token == app.login_session:
+    if check_session_key(session_token, app.login_sessions):
         return welcome_response(format)
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
@@ -150,7 +172,7 @@ async def welcome_session(format: Optional[str] = Query(None), session_token: Op
 
 @app.get("/welcome_token", status_code=status.HTTP_200_OK)
 async def welcome_token(format: Optional[str] = Query(None), token: Optional[str] = Query(None), *, response: Response):
-    if token == app.login_token:
+    if check_session_key(token, app.login_tokens):
         return welcome_response(format)
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
@@ -159,9 +181,9 @@ async def welcome_token(format: Optional[str] = Query(None), token: Optional[str
 
 @app.delete("/logout_session", status_code=status.HTTP_302_FOUND)
 async def logout_session(format: Optional[str] = Query(None), session_token: Optional[str] = Cookie(None),
-                          *, response: Response):
-    if session_token == app.login_session:
-        app.login_session = None
+                         *, response: Response):
+    if check_session_key(session_token, app.login_sessions):
+        remove_session_key(session_token, app.login_sessions)
         return RedirectResponse(f"/logged_out?&format={format}", status_code=status.HTTP_303_SEE_OTHER)
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
@@ -169,8 +191,8 @@ async def logout_session(format: Optional[str] = Query(None), session_token: Opt
 
 @app.delete("/logout_token", status_code=status.HTTP_302_FOUND)
 async def logout_token(format: Optional[str] = Query(None), token: Optional[str] = Query(None), *, response: Response):
-    if token == app.login_token:
-        app.login_token = None
+    if check_session_key(token, app.login_tokens):
+        remove_session_key(token, app.login_tokens)
         return RedirectResponse(f"/logged_out?&format={format}", status_code=status.HTTP_303_SEE_OTHER)
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
