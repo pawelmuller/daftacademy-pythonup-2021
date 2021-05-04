@@ -11,6 +11,7 @@ app.patient_id = 0
 app.patients = []
 
 app.login_session = None
+app.login_token = None
 
 
 today = date.today()
@@ -99,6 +100,16 @@ async def login_session(user: str, password: str, response: Response):
     if user == "4dm1n" and password == "NotSoSecurePa$$":
         app.login_session = f"{today}+{user}+{password}"
         response.set_cookie(key="session_token", value=app.login_session)
+    else:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+    return
+
+
+@app.post("/login_token", status_code=status.HTTP_201_CREATED)
+async def login_token(user: str, password: str, response: Response):
+    if user == "4dm1n" and password == "NotSoSecurePa$$":
+        app.login_token = f"{today}+{user}+{password}"
+        return {"token": app.login_token}
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
     return
