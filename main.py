@@ -145,3 +145,12 @@ async def welcome_session(format: Optional[str] = '', session_token: Optional[st
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {"message": "No session"}
+
+
+@app.get("/welcome_token", status_code=status.HTTP_200_OK)
+async def welcome_token(format: Optional[str] = '', token: Optional[str] = '', *, response: Response):
+    if token == app.login_token:
+        return welcome_response(format)
+    else:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {"message": "No session"}
