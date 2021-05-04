@@ -50,22 +50,22 @@ async def counter():
 @app.put("/method")
 @app.options("/method")
 @app.delete("/method")
-@app.post("/method", status_code=201)
+@app.post("/method", status_code=status.HTTP_201_CREATED)
 async def method_get_return(request: Request):
     return {"method": f"{request.method}"}
 
 
-@app.get("/auth", status_code=401)
+@app.get("/auth", status_code=status.HTTP_401_UNAUTHORIZED)
 async def method_post_return(password: str = None, password_hash: str = None, *, response: Response):
     if password is None or password_hash is None or len(password) == 0 or len(password_hash) == 0:
-        response.status_code = 401
+        response.status_code = status.HTTP_401_UNAUTHORIZED
     else:
         true_password_hash = sha512(str(password).encode('UTF-8')).hexdigest()
         if true_password_hash == password_hash:
-            response.status_code = 204
+            response.status_code = status.HTTP_204_NO_CONTENT
 
 
-@app.post("/register", status_code=201)
+@app.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_for_vaccination(patient: Patient):
     app.patient_id += 1
     letters_count = 0
@@ -84,14 +84,14 @@ async def register_for_vaccination(patient: Patient):
 @app.get("/patient/{patient_id}")
 async def get_patient(patient_id: Optional[int] = None, *, response: Response):
     if patient_id > len(app.patients):
-        response.status_code = 404
+        response.status_code = status.HTTP_404_NOT_FOUND
         return
     elif patient_id < 1:
-        response.status_code = 400
+        response.status_code = status.HTTP_400_BAD_REQUEST
         return
     else:
         patient = app.patients[patient_id - 1]
-        response.status_code = 200
+        response.status_code = status.HTTP_200_OK
         return patient
 
 
