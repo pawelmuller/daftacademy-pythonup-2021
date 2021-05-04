@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Response, Request, status, Depends
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Response, Request, status, Depends, Cookie
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from hashlib import sha512
 from typing import Optional
@@ -105,7 +105,7 @@ async def login_session(credentials: HTTPBasicCredentials = Depends(security), *
     correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
 
     if correct_username and correct_password:
-        app.login_session = f"{today}+{credentials.username}+{credentials.password}"
+        app.login_session = sha512(f"{today}+{credentials.username}+{credentials.password}".encode()).hexdigest()
         response.set_cookie(key="session_token", value=app.login_session)
         return {"message": "Welcome!"}
     else:
@@ -119,8 +119,29 @@ async def login_token(credentials: HTTPBasicCredentials = Depends(security), *, 
     correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
 
     if correct_username and correct_password:
-        app.login_token = f"{today}+{credentials.username}+{credentials.password}"
+        app.login_token = sha512(f"{today}+{credentials.username}+{credentials.password}".encode()).hexdigest()
         return {"token": app.login_token}
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
         return {"message": "Wrong username or password!"}
+
+
+def welcome_response(response_format: str):
+    if response_format == "html":
+        html_content = "<h1>Welcome!</h1>"
+        return HTMLResponse(content=html_content)
+    elif response_format == "json":
+        json_content = {"message": "Welcome!"}
+        return JSONResponse(content=json_content)
+    else:
+        plain_content = "Welcome!"
+        return PlainTextResponse(content=plain_content)
+
+
+@app.get("/welcome_session", status_code=status.HTTP_200_OK)
+async def welcome_session(format: Optional[str] = '', session_token: Optional[str] = Cookie(None), *, response: Response):
+    if session_token == app.login_session:
+        return welcome_response(format)
+    else:
+        response.status_code = status.HTTP_401_UNAUTHORIZED
+        return {"message": "No session"}
