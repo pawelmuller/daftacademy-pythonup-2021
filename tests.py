@@ -112,4 +112,3 @@ def test_get_patient():
 
     response = client.get(f"/patient/300")
     assert response.status_code == 404
-

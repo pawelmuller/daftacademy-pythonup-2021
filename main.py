@@ -1,5 +1,5 @@
-import string
 from fastapi import FastAPI, Response, Request
+from fastapi.responses import HTMLResponse
 from hashlib import sha512
 from typing import Optional
 from pydantic import BaseModel
@@ -24,6 +24,11 @@ class Patient(BaseModel):
 @app.get("/")
 def root():
     return {"message": "Hello world!"}
+
+
+@app.get("/hello", response_class=HTMLResponse)
+async def hello():
+    return f"<h1>Hello! Today date is {today}</h1>"
 
 
 @app.get("/hello/{name}")
