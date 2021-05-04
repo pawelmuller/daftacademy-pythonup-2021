@@ -1,11 +1,15 @@
-from fastapi import FastAPI, Response, Request, status
+from fastapi import FastAPI, Response, Request, status, Depends
 from fastapi.responses import HTMLResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from hashlib import sha512
 from typing import Optional
 from pydantic import BaseModel
 from datetime import date, timedelta
+import secrets
 
 app = FastAPI()
+security = HTTPBasic()
+
 app.counter = 0
 app.patient_id = 0
 app.patients = []
@@ -96,20 +100,27 @@ async def get_patient(patient_id: Optional[int] = None, *, response: Response):
 
 
 @app.post("/login_session", status_code=status.HTTP_201_CREATED)
-async def login_session(user: str, password: str, response: Response):
-    if user == "4dm1n" and password == "NotSoSecurePa$$":
-        app.login_session = f"{today}+{user}+{password}"
+async def login_session(credentials: HTTPBasicCredentials = Depends(security), *, response: Response):
+    correct_username = secrets.compare_digest(credentials.username, "4dm1n")
+    correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
+
+    if correct_username and correct_password:
+        app.login_session = f"{today}+{credentials.username}+{credentials.password}"
         response.set_cookie(key="session_token", value=app.login_session)
+        return {"message": "Welcome!"}
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
-    return
+        return {"message": "Wrong username or password!"}
 
 
 @app.post("/login_token", status_code=status.HTTP_201_CREATED)
-async def login_token(user: str, password: str, response: Response):
-    if user == "4dm1n" and password == "NotSoSecurePa$$":
-        app.login_token = f"{today}+{user}+{password}"
+async def login_token(credentials: HTTPBasicCredentials = Depends(security), *, response: Response):
+    correct_username = secrets.compare_digest(credentials.username, "4dm1n")
+    correct_password = secrets.compare_digest(credentials.password, "NotSoSecurePa$$")
+
+    if correct_username and correct_password:
+        app.login_token = f"{today}+{credentials.username}+{credentials.password}"
         return {"token": app.login_token}
     else:
         response.status_code = status.HTTP_401_UNAUTHORIZED
-    return
+        return {"message": "Wrong username or password!"}
