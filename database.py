@@ -23,8 +23,8 @@ async def get_categories():
     categories = database.connection.execute(
         "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID"
                                              ).fetchall()
-    categories = [{"id": index, "name": name} for index, name in categories]
-    return {"categories": categories}
+    response_categories = [{"id": index, "name": name} for index, name in categories]
+    return {"categories": response_categories}
 
 
 @database.get("/customers", status_code=status.HTTP_200_OK)
@@ -35,8 +35,8 @@ async def get_customers():
         FROM Customers
         """
                                              ).fetchall()
-    customers = [{"id": index, "name": name, "full_address": address} for index, name, address in customers]
-    return {"customers": customers}
+    response_customers = [{"id": index, "name": name, "full_address": address} for index, name, address in customers]
+    return {"customers": response_customers}
 
 
 @database.get("/products/{index}")
