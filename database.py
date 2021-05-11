@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Response, HTTPException
 import sqlite3
 
 
@@ -36,3 +36,14 @@ async def get_customers():
                                              ).fetchall()
     customers = [{"id": index, "name": name, "full_address": address} for index, name, address in customers]
     return {"customers": customers}
+
+
+@database.get("/products/{index}")
+async def get_products(response: Response, index: int):
+    product = database.connection.execute(
+        "SELECT ProductID, ProductName FROM Products WHERE ProductID = (?)", (index,)).fetchone()
+    if product is not None:
+        response.status_code = status.HTTP_200_OK
+        return {"id": product[0], "name": product[1]}
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No product with given id")
