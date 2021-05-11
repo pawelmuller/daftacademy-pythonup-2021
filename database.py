@@ -1,7 +1,7 @@
-from fastapi import APIRouter, status, Response, HTTPException
-from typing import Optional
 import sqlite3
+from typing import Optional
 
+from fastapi import APIRouter, status, Response, HTTPException
 
 database = APIRouter()
 database.__name__ = "DataBase"
@@ -22,7 +22,7 @@ async def shutdown():
 async def get_categories():
     categories = database.connection.execute(
         "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID"
-                                             ).fetchall()
+    ).fetchall()
     response_categories = [{"id": index, "name": name} for index, name in categories]
     return {"categories": response_categories}
 
@@ -34,7 +34,7 @@ async def get_customers():
         SELECT CustomerID, CompanyName, Address || ' ' || PostalCode || ' ' || City || ' ' || Country
         FROM Customers
         """
-                                             ).fetchall()
+    ).fetchall()
     response_customers = [{"id": index, "name": name, "full_address": address} for index, name, address in customers]
     return {"customers": response_customers}
 
@@ -93,3 +93,30 @@ async def get_products_extended():
                          for index, name, category, supplier in products]
 
     return {"products_extended": response_products}
+
+
+def check_product(product_id):
+    product = database.connection.execute(
+        "SELECT ProductID FROM Products WHERE ProductID = (?)", (product_id,)).fetchone()
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No product with given id")
+
+
+@database.get("/products/{product_id}/orders", status_code=status.HTTP_200_OK)
+async def get_products_extended(product_id: int):
+    check_product(product_id)
+
+    orders = database.connection.execute(
+        """
+        SELECT O.OrderID, C.CompanyName, OD.Quantity,
+            ROUND(OD.UnitPrice * OD.Quantity - (OD.Discount * (OD.UnitPrice * OD.Quantity)), 2) as TotalPrice
+        FROM Orders O
+        JOIN "Order Details" OD on O.OrderID = OD.OrderID
+        JOIN Customers C on O.CustomerID = C.CustomerID
+        WHERE ProductID = (?)
+        """, (product_id,)).fetchall()
+
+    response_orders = [{"id": index, "customer": customer, "quantity": quantity, "total_price": total_price}
+                       for index, customer, quantity, total_price in orders]
+
+    return {"orders": response_orders}
