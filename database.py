@@ -2,9 +2,14 @@ import sqlite3
 from typing import Optional
 
 from fastapi import APIRouter, status, Response, HTTPException
+from pydantic import BaseModel
 
 database = APIRouter()
 database.__name__ = "DataBase"
+
+
+class NewCategory(BaseModel):
+    name: str
 
 
 @database.on_event("startup")
@@ -120,3 +125,10 @@ async def get_categories():
     ).fetchall()
     response_categories = [{"id": index, "name": name} for index, name in categories]
     return {"categories": response_categories}
+
+
+@database.post("/categories", status_code=status.HTTP_201_CREATED)
+async def post_categories(new_category: NewCategory):
+    insert = database.connection.execute(f"INSERT INTO Categories (CategoryName) VALUES ('{new_category.name}')")
+    database.connection.commit()
+    return {"id": insert.lastrowid, "name": new_category.name}
