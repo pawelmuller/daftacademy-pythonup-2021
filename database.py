@@ -28,4 +28,9 @@ async def get_categories():
 
 @database.get("/customers", status_code=status.HTTP_200_OK)
 async def get_customers():
-    return
+    customers = database.connection.execute(
+        "SELECT CustomerID, CompanyName FROM Customers ORDER BY CustomerID"
+                                             ).fetchall()
+    customers = [{"id": index, "name": name} for index, name in customers]
+    return {"customers": customers}
+
