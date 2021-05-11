@@ -1,12 +1,14 @@
+import secrets
+from datetime import date, timedelta, datetime
+from hashlib import sha512
+from typing import Optional
+
 from fastapi import FastAPI, Response, Request, status, Depends, Cookie, Query
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from hashlib import sha512
-from typing import Optional
 from pydantic import BaseModel
-from datetime import date, timedelta, datetime
+
 from database import database
-import secrets
 
 app = FastAPI()
 app.include_router(database, tags=["default"])
@@ -211,4 +213,3 @@ async def logged_out(format: Optional[str] = Query(None)):
     else:
         plain_content = "Logged out!"
         return PlainTextResponse(content=plain_content)
-
