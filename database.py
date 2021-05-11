@@ -143,7 +143,7 @@ async def post_categories(new_category: NewCategory):
 
 @database.put("/categories/{category_index}", status_code=status.HTTP_201_CREATED)
 async def put_categories(category: NewCategory, category_index: int):
-    check_category_existence(category_index)
+    await check_category_existence(category_index)
 
     update = database.connection.execute(
         "UPDATE Categories SET CategoryName = ? WHERE CategoryID = ?",
@@ -154,7 +154,7 @@ async def put_categories(category: NewCategory, category_index: int):
 
 @database.delete("/categories/{category_index}", status_code=status.HTTP_200_OK)
 async def delete_categories(category_index: int):
-    check_category_existence(category_index)
+    await check_category_existence(category_index)
 
     database.connection.execute(
         "DELETE FROM Categories WHERE CategoryID = ?",
