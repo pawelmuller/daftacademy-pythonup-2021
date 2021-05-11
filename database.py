@@ -1,7 +1,7 @@
-from fastapi import APIRouter, status, Response, HTTPException
-from typing import Optional
 import sqlite3
+from typing import Optional
 
+from fastapi import APIRouter, status, Response, HTTPException
 
 database = APIRouter()
 database.__name__ = "DataBase"
@@ -22,7 +22,7 @@ async def shutdown():
 async def get_categories():
     categories = database.connection.execute(
         "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID"
-                                             ).fetchall()
+    ).fetchall()
     response_categories = [{"id": index, "name": name} for index, name in categories]
     return {"categories": response_categories}
 
@@ -34,7 +34,7 @@ async def get_customers():
         SELECT CustomerID, CompanyName, Address || ' ' || PostalCode || ' ' || City || ' ' || Country
         FROM Customers
         """
-                                             ).fetchall()
+    ).fetchall()
     response_customers = [{"id": index, "name": name, "full_address": address} for index, name, address in customers]
     return {"customers": response_customers}
 
