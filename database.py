@@ -1,4 +1,5 @@
 from fastapi import APIRouter, status, Response, HTTPException
+from typing import Optional
 import sqlite3
 
 
@@ -47,3 +48,31 @@ async def get_products(response: Response, index: int):
         return {"id": product[0], "name": product[1]}
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No product with given id")
+
+
+@database.get("/employees")
+async def get_employees(response: Response,
+                        limit: Optional[int] = None, offset: Optional[int] = None, order: str = 'id'):
+    translation = {
+        "id": "EmployeeID",
+        "first_name": "FirstName",
+        "last_name": "LastName",
+        "city": "City"
+    }
+    try:
+        order = translation[order]
+    except KeyError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"You can order only using: {translation.keys()}")
+
+    employees = database.connection.execute(
+        f"""
+        SELECT EmployeeID, LastName, FirstName, City FROM Employees ORDER BY {order}
+        {f" LIMIT {limit}" if limit else ""}{f" OFFSET {offset}" if offset else ""}
+        """).fetchall()
+
+    response.status_code = status.HTTP_200_OK
+    response_employees = [{"id": index, "last_name": last_name, "first_name": first_name, "city": city}
+                          for index, last_name, first_name, city in employees]
+
+    return {"employees": response_employees}
