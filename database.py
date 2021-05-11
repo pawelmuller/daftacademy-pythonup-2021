@@ -24,3 +24,8 @@ async def get_categories():
                                              ).fetchall()
     categories = [{"id": index, "name": name} for index, name in categories]
     return {"categories": categories}
+
+
+@database.get("/customers", status_code=status.HTTP_200_OK)
+async def get_customers():
+    return
