@@ -76,3 +76,20 @@ async def get_employees(response: Response,
                           for index, last_name, first_name, city in employees]
 
     return {"employees": response_employees}
+
+
+@database.get("/products_extended", status_code=status.HTTP_200_OK)
+async def get_products_extended():
+    products = database.connection.execute(
+        """
+        SELECT ProductID, ProductName, C.CategoryName, S.CompanyName
+        FROM Products
+        JOIN Categories C on Products.CategoryID = C.CategoryID
+        JOIN Suppliers S on Products.SupplierID = S.SupplierID
+        ORDER BY ProductID
+        """).fetchall()
+
+    response_products = [{"id": index, "name": name, "category": category, "supplier": supplier}
+                         for index, name, category, supplier in products]
+
+    return {"products_extended": response_products}
