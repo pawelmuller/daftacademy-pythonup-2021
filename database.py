@@ -18,15 +18,6 @@ async def shutdown():
     database.connection.close()
 
 
-@database.get("/categories", status_code=status.HTTP_200_OK)
-async def get_categories():
-    categories = database.connection.execute(
-        "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID"
-    ).fetchall()
-    response_categories = [{"id": index, "name": name} for index, name in categories]
-    return {"categories": response_categories}
-
-
 @database.get("/customers", status_code=status.HTTP_200_OK)
 async def get_customers():
     customers = database.connection.execute(
@@ -120,3 +111,12 @@ async def get_products_extended(product_id: int):
                        for index, customer, quantity, total_price in orders]
 
     return {"orders": response_orders}
+
+
+@database.get("/categories", status_code=status.HTTP_200_OK)
+async def get_categories():
+    categories = database.connection.execute(
+        "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID"
+    ).fetchall()
+    response_categories = [{"id": index, "name": name} for index, name in categories]
+    return {"categories": response_categories}
