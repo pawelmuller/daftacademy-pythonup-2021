@@ -29,8 +29,10 @@ async def get_categories():
 @database.get("/customers", status_code=status.HTTP_200_OK)
 async def get_customers():
     customers = database.connection.execute(
-        "SELECT CustomerID, CompanyName FROM Customers ORDER BY CustomerID"
+        """
+        SELECT CustomerID, CompanyName, Address || ' ' || PostalCode || ' ' || City || ' ' || Country
+        FROM Customers
+        """
                                              ).fetchall()
-    customers = [{"id": index, "name": name} for index, name in customers]
+    customers = [{"id": index, "name": name, "full_address": address} for index, name, address in customers]
     return {"customers": customers}
-
