@@ -91,7 +91,7 @@ async def get_products_extended():
     return {"products_extended": response_products}
 
 
-def check_product(product_id):
+def check_product_existence(product_id):
     product = database.connection.execute(
         "SELECT ProductID FROM Products WHERE ProductID = (?)", (product_id,)).fetchone()
     if product is None:
@@ -100,7 +100,7 @@ def check_product(product_id):
 
 @database.get("/products/{product_id}/orders", status_code=status.HTTP_200_OK)
 async def get_products_extended(product_id: int):
-    check_product(product_id)
+    check_product_existence(product_id)
 
     orders = database.connection.execute(
         """
