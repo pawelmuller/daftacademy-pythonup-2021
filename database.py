@@ -15,3 +15,12 @@ async def startup():
 @database.on_event("shutdown")
 async def shutdown():
     database.connection.close()
+
+
+@database.get("/categories", status_code=status.HTTP_200_OK)
+async def get_categories():
+    categories = database.connection.execute(
+        "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID"
+                                             ).fetchall()
+    categories = [{"id": index, "name": name} for index, name in categories]
+    return {"categories": categories}
