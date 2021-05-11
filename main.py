@@ -5,9 +5,11 @@ from hashlib import sha512
 from typing import Optional
 from pydantic import BaseModel
 from datetime import date, timedelta, datetime
+from database import database
 import secrets
 
 app = FastAPI()
+app.include_router(database, tags=["default"])
 security = HTTPBasic()
 
 SESSIONS_LIMIT = 3
@@ -209,3 +211,4 @@ async def logged_out(format: Optional[str] = Query(None)):
     else:
         plain_content = "Logged out!"
         return PlainTextResponse(content=plain_content)
+
