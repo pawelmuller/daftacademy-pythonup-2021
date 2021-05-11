@@ -150,3 +150,14 @@ async def put_categories(category: NewCategory, category_index: int):
         (category.name, category_index), )
     database.connection.commit()
     return {"id": category_index, "name": category.name}
+
+
+@database.delete("/categories/{category_index}", status_code=status.HTTP_200_OK)
+async def delete_categories(category_index: int):
+    check_category_existence(category_index)
+
+    database.connection.execute(
+        "DELETE FROM Categories WHERE CategoryID = ?",
+        (category_index,))
+    database.connection.commit()
+    return {"deleted": 1}
