@@ -141,7 +141,7 @@ async def post_categories(new_category: NewCategory):
     return {"id": insert.lastrowid, "name": new_category.name}
 
 
-@database.put("/categories/{category_index}", status_code=status.HTTP_201_CREATED)
+@database.put("/categories/{category_index}", status_code=status.HTTP_200_OK)
 async def put_categories(category: NewCategory, category_index: int):
     await check_category_existence(category_index)
 
