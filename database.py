@@ -145,7 +145,7 @@ async def post_categories(new_category: NewCategory):
 async def put_categories(category: NewCategory, category_index: int):
     await check_category_existence(category_index)
 
-    update = database.connection.execute(
+    database.connection.execute(
         "UPDATE Categories SET CategoryName = ? WHERE CategoryID = ?",
         (category.name, category_index), )
     database.connection.commit()
