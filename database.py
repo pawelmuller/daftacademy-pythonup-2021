@@ -2,9 +2,14 @@ import sqlite3
 from typing import Optional
 
 from fastapi import APIRouter, status, Response, HTTPException
+from pydantic import BaseModel
 
 database = APIRouter()
 database.__name__ = "DataBase"
+
+
+class NewCategory(BaseModel):
+    name: str
 
 
 @database.on_event("startup")
@@ -16,15 +21,6 @@ async def startup():
 @database.on_event("shutdown")
 async def shutdown():
     database.connection.close()
-
-
-@database.get("/categories", status_code=status.HTTP_200_OK)
-async def get_categories():
-    categories = database.connection.execute(
-        "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID"
-    ).fetchall()
-    response_categories = [{"id": index, "name": name} for index, name in categories]
-    return {"categories": response_categories}
 
 
 @database.get("/customers", status_code=status.HTTP_200_OK)
@@ -95,7 +91,7 @@ async def get_products_extended():
     return {"products_extended": response_products}
 
 
-def check_product(product_id):
+def check_product_existence(product_id):
     product = database.connection.execute(
         "SELECT ProductID FROM Products WHERE ProductID = (?)", (product_id,)).fetchone()
     if product is None:
@@ -104,7 +100,7 @@ def check_product(product_id):
 
 @database.get("/products/{product_id}/orders", status_code=status.HTTP_200_OK)
 async def get_products_extended(product_id: int):
-    check_product(product_id)
+    check_product_existence(product_id)
 
     orders = database.connection.execute(
         """
@@ -120,3 +116,48 @@ async def get_products_extended(product_id: int):
                        for index, customer, quantity, total_price in orders]
 
     return {"orders": response_orders}
+
+
+async def check_category_existence(category_id):
+    category = database.connection.execute(
+        "SELECT CategoryID FROM Categories WHERE CategoryID = (?)", (category_id,)).fetchone()
+    if category is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No category with given id.")
+
+
+@database.get("/categories", status_code=status.HTTP_200_OK)
+async def get_categories():
+    categories = database.connection.execute(
+        "SELECT CategoryID, CategoryName FROM Categories ORDER BY CategoryID"
+    ).fetchall()
+    response_categories = [{"id": index, "name": name} for index, name in categories]
+    return {"categories": response_categories}
+
+
+@database.post("/categories", status_code=status.HTTP_201_CREATED)
+async def post_categories(new_category: NewCategory):
+    insert = database.connection.execute(f"INSERT INTO Categories (CategoryName) VALUES ('{new_category.name}')")
+    database.connection.commit()
+    return {"id": insert.lastrowid, "name": new_category.name}
+
+
+@database.put("/categories/{category_index}", status_code=status.HTTP_201_CREATED)
+async def put_categories(category: NewCategory, category_index: int):
+    await check_category_existence(category_index)
+
+    database.connection.execute(
+        "UPDATE Categories SET CategoryName = ? WHERE CategoryID = ?",
+        (category.name, category_index), )
+    database.connection.commit()
+    return {"id": category_index, "name": category.name}
+
+
+@database.delete("/categories/{category_index}", status_code=status.HTTP_200_OK)
+async def delete_categories(category_index: int):
+    await check_category_existence(category_index)
+
+    database.connection.execute(
+        "DELETE FROM Categories WHERE CategoryID = ?",
+        (category_index,))
+    database.connection.commit()
+    return {"deleted": 1}
