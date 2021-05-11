@@ -118,6 +118,13 @@ async def get_products_extended(product_id: int):
     return {"orders": response_orders}
 
 
+async def check_category_existence(category_id):
+    category = database.connection.execute(
+        "SELECT CategoryID FROM Categories WHERE CategoryID = (?)", (category_id,)).fetchone()
+    if category is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No category with given id.")
+
+
 @database.get("/categories", status_code=status.HTTP_200_OK)
 async def get_categories():
     categories = database.connection.execute(
@@ -132,3 +139,14 @@ async def post_categories(new_category: NewCategory):
     insert = database.connection.execute(f"INSERT INTO Categories (CategoryName) VALUES ('{new_category.name}')")
     database.connection.commit()
     return {"id": insert.lastrowid, "name": new_category.name}
+
+
+@database.put("/categories/{category_index}", status_code=status.HTTP_201_CREATED)
+async def put_categories(category: NewCategory, category_index: int):
+    check_category_existence(category_index)
+
+    update = database.connection.execute(
+        "UPDATE Categories SET CategoryName = ? WHERE CategoryID = ?",
+        (category.name, category_index), )
+    database.connection.commit()
+    return {"id": category_index, "name": category.name}
